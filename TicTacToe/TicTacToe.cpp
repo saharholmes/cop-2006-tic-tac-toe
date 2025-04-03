@@ -17,6 +17,36 @@ void drawGameBoard() {
 	DrawLine(verticalLine2, 0, verticalLine2, height, WHITE);
 }
 
+std::vector<char> grid(9, ' ');
+char playerTurn = 'X';
+
+char win()
+{
+    int counter;
+    char slot;
+    int won[8][3] = {{0, 3, 6}, {1, 4, 7}, {2, 5, 8}, {0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {0, 4, 8}, {2, 4, 6}};
+    for (counter = 0; counter < 8; counter++)
+    {
+        int combination[3] = {won[counter][0], won[counter][1], won[counter][2]};
+        {
+            if (grid[combination[0]] == grid[combination[1]] && grid[combination[1]] == grid[combination[2]] && grid[combination[0]] != ' ')
+                {
+                return grid[combination[0]];
+                }
+        }
+        for (counter = 0; counter < 9; counter++)
+        {
+            slot = grid[counter];
+            {
+                if (slot == ' ')
+                {
+                    return false;
+                }
+            }
+        }
+    }
+}
+
 int getButtonPressed() {
 	const int x = GetMouseX();
 	const int y = GetMouseY();
