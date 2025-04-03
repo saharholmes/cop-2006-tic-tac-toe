@@ -3,23 +3,11 @@
 #include <string>
 #include <vector>
 #include "raylib.h"
-
-double width, height, horizontalLine1, horizontalLine2, verticalLine1, verticalLine2;
-
-void drawGameBoard() {
-	horizontalLine1 = height / 3;
-	horizontalLine2 = height * 2 / 3;
-	DrawLine(0, horizontalLine1, width, horizontalLine1, WHITE);
-	DrawLine(0, horizontalLine2, width, horizontalLine2, WHITE);
-	verticalLine1 = width / 3;
-	verticalLine2 = width * 2 / 3;
-	DrawLine(verticalLine1, 0, verticalLine1, height, WHITE);
-	DrawLine(verticalLine2, 0, verticalLine2, height, WHITE);
-}
-
+#include "raygui.h"
+double windowWidth, windowHeight;
 std::vector<char> grid(9, ' ');
 char playerTurn = 'X';
-
+Rectangle border;
 char win()
 {
     int counter;
@@ -46,39 +34,50 @@ char win()
         }
     }
 }
-
-int getButtonPressed() {
-	const int x = GetMouseX();
-	const int y = GetMouseY();
-	std::cout << "\nMouse Click: (" << x << ", " << y << ")" << std::endl;
-	int button;
-	if (x > verticalLine2) button = 2;
-	if (x < verticalLine2) button = 1;
-	if (x < verticalLine1) button = 0;
-	if (y > horizontalLine2) button += 6;
-	if (y < horizontalLine2 && y > horizontalLine1) button += 3;
-	return button;
-}
-
 int main()
 {
-	width = GetScreenWidth();
-	height = GetScreenHeight();
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-	InitWindow(width, height, "Tic Tac Toe");
+	InitWindow(windowWidth, windowHeight, "Tic Tac Toe");
 	SetWindowMinSize(320, 180);
-	SetWindowMaxSize(width, height);
+	SetWindowMaxSize(windowWidth, windowHeight);
 	MaximizeWindow();
 	while (!WindowShouldClose()) {
 		BeginDrawing();
 		if (IsWindowResized()) {
-			width = GetScreenWidth();
-			height = GetScreenHeight();
-			std::cout << "width: " << width << "\nheight: " << height << std::endl;
+			windowWidth = GetScreenWidth();
+			windowHeight = GetScreenHeight();
 		}
-		drawGameBoard();
+		if (windowWidth > windowHeight) {
+			border.width = windowHeight;
+			border.height = windowHeight;
+			border.x = (windowWidth - border.width) / 2;
+			border.y = 0;
+		}
+		else {
+			border.height = windowWidth;
+			border.width = windowWidth;
+			border.y = (windowHeight - border.height) / 2;
+			border.x = 0;
+		}
+		DrawRectangleLinesEx(border, 2, WHITE);
+		const float cellLength = border.height / 3;
+		const float y1 = border.y + cellLength;
+		const float y2 = border.y + cellLength * 2;
+		const float x1 = border.x + cellLength;
+		const float x2 = border.x + cellLength * 2;
+		DrawLineEx({ border.x, y1 }, { border.x + border.width, y1 }, 2, WHITE);
+		DrawLineEx({ border.x, y2 }, { border.x + border.width, y2 }, 2, WHITE);
+		DrawLineEx({ x1, border.y }, { x1, border.y + border.height }, 2, WHITE);
+		DrawLineEx({ x2, border.y }, { x2, border.y + border.height }, 2, WHITE);
 		if (IsMouseButtonPressed(0)) {
-			std::cout << "Button Pressed: " << getButtonPressed() << std::endl;
+			const int mouseX = GetMouseX();
+			const int mouseY = GetMouseY();
+			int boardIndexY = 0;
+			int boardIndexX = 0;
+			if (mouseX > y2) boardIndexY = 2;
+			if (mouseX <= y2 && mouseX > y1) boardIndexY = 1;
+			if (mouseY > x2) boardIndexX = 2;
+			if (mouseY <= x2 && mouseY > x1) boardIndexX = 1;
 		}
 		EndDrawing();
 	}
