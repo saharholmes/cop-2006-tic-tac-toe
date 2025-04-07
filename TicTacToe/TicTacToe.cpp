@@ -43,7 +43,6 @@ public:
 		button.play = { windowWidth / 2 - button.textSize.x / 2, windowHeight / 2 - button.textSize.y / 2, button.textSize.x, button.textSize.y };
 	}
 	void DrawMenu() {
-		windowWidth = GetScreenWidth();
 		const int textSize = MeasureText("TicTacToe", windowWidth / 10);
 		DrawText("TicTacToe", windowWidth / 2 - textSize / 2, 0, windowWidth / 10, WHITE);
 		if (GuiButton(button.play, "Play")) {
@@ -80,8 +79,8 @@ public:
 		}
 		else {
 			button.textSize = { std::max((windowWidth / 4), 400.0f), std::max((windowWidth / 30), 50.0f) };
-			button.playAgain = { windowWidth / 2 - button.textSize.x / 2, windowHeight * 0.6f - button.textSize.y / 2, button.textSize.x, button.textSize.y };
-			button.exit = { windowWidth / 2 - button.textSize.x / 2, windowHeight * 0.6f - button.textSize.y * 2, button.textSize.x, button.textSize.y};
+			button.playAgain = { windowWidth / 2 - button.textSize.x / 2, windowHeight * 0.6f - button.textSize.y * 2, button.textSize.x, button.textSize.y };
+			button.exit = { button.playAgain.x, windowHeight * 0.6f - button.textSize.y / 2, button.textSize.x, button.textSize.y};
 			button.back = { area.x + cellLength * 2.5f - std::max((windowWidth / 7), 200.0f) / 2, area.height + 5, std::max((windowWidth / 7), 200.0f), 45 };
 		}
 		GuiSetStyle(DEFAULT, TEXT_SIZE, button.textSize.y);
