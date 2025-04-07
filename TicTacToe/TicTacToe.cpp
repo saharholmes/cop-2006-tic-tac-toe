@@ -14,30 +14,33 @@ struct GameCell {
 	std::string text;
 	Rectangle box;
 };
-class TTTGame {
+class TicTacToe {
 public:
 	Rectangle area;
 	std::array<GameCell, 9> cells;
 	float cellLength, windowWidth, windowHeight;
 	struct ButtonManager {
-		Vector2 globalSize;
+		Vector2 textSize;
 		int fontSize;
 		Rectangle play;
+		Rectangle back;
+		Rectangle playAgain;
 		Rectangle exit;
-		Rectangle restart;
 	} button;
 	Screen currentScreen = MAIN_MENU;
 	std::string currentPlayer;
 	std::string winner;
-	TTTGame() {
+	double resetRequestTime;
+	TicTacToe() {
 		SetMenuSize();
+		resetRequestTime = -1;
 	}
 	void SetMenuSize() {
 		windowWidth = GetScreenWidth();
 		windowHeight = GetScreenHeight();
-		button.globalSize = { windowWidth / 4, windowWidth / 30 };
-		GuiSetStyle(DEFAULT, TEXT_SIZE, button.globalSize.y);
-		button.play = { windowWidth / 2 - button.globalSize.x / 2, windowHeight / 2 - button.globalSize.y / 2, button.globalSize.x, button.globalSize.y };
+		button.textSize = { std::max((windowWidth / 4), 400.0f), std::max((windowWidth / 30), 50.0f) };
+		GuiSetStyle(DEFAULT, TEXT_SIZE, button.textSize.y);
+		button.play = { windowWidth / 2 - button.textSize.x / 2, windowHeight / 2 - button.textSize.y / 2, button.textSize.x, button.textSize.y };
 	}
 	void DrawMenu() {
 		windowWidth = GetScreenWidth();
@@ -52,10 +55,7 @@ public:
 	void SetGridSize() {
 		windowWidth = GetScreenWidth();
 		windowHeight = GetScreenHeight();
-		button.globalSize = { windowWidth / 7, 40 };
-		GuiSetStyle(DEFAULT, TEXT_SIZE, button.globalSize.y);
 		area.height = windowHeight - 50;
-		button.exit = { windowWidth / 2 - button.globalSize.x / 2, area.height + 5, button.globalSize.x, button.globalSize.y };
 		if (windowWidth > windowHeight) {
 			area.x = (windowWidth - area.height) / 2;
 			area.y = 0;
@@ -74,6 +74,17 @@ public:
 			cells[i].box.height = cellLength;
 			cells[i].box.width = cellLength;
 		}
+		if (winner.empty()) {
+			button.textSize = { std::max((windowWidth / 7), 200.0f), 45 };
+			button.back = { area.x + cellLength * 2.5f - button.textSize.x / 2, area.height + 5, button.textSize.x, button.textSize.y };
+		}
+		else {
+			button.textSize = { std::max((windowWidth / 4), 400.0f), std::max((windowWidth / 30), 50.0f) };
+			button.playAgain = { windowWidth / 2 - button.textSize.x / 2, windowHeight * 0.6f - button.textSize.y / 2, button.textSize.x, button.textSize.y };
+			button.exit = { windowWidth / 2 - button.textSize.x / 2, windowHeight * 0.6f - button.textSize.y * 2, button.textSize.x, button.textSize.y};
+			button.back = { area.x + cellLength * 2.5f - std::max((windowWidth / 7), 200.0f) / 2, area.height + 5, std::max((windowWidth / 7), 200.0f), 45 };
+		}
+		GuiSetStyle(DEFAULT, TEXT_SIZE, button.textSize.y);
 	}
 	void DrawGrid() {
 		for (int i = 0; i < 9; i++) {
@@ -87,56 +98,97 @@ public:
 				WHITE
 			);
 		}
-		if (!winner.empty()) {
-			const std::string winnerText = winner + " has won the game!";
-			const Vector2 textSize = MeasureTextEx(GetFontDefault(), "TicTacToe", windowWidth / 10, 1);
-			DrawText(winnerText.c_str(), windowWidth / 2 - textSize.x / 2, 0, windowWidth / 10, WHITE);
-			DrawRectangle(0, 0, windowWidth, windowHeight, { 255, 255, 255, 128 });
-		}
-		if (GuiButton(button.exit, "Exit")) {
-			currentScreen = Screen::MAIN_MENU;
-			SetMenuSize();
-			for (int i = 0; i < 9; i++) cells[i].text = "";
-		}
-	}
-	void GridMouseClick() {
-		for (int i = 0; i < 9; i++) {
-			const Vector2 mouse = { GetMouseX(), GetMouseY() };
-			if (CheckCollisionPointRec(mouse, cells[i].box)) {
-				if (!cells[i].text.empty()) break;
-				cells[i].text = currentPlayer;
-				GetWinner();
-				std::cout << winner << std::endl;
-				if (!winner.empty()) break;
-				currentPlayer = currentPlayer == "X" ? "O" : "X";
-				int count = 0;
-				for (int i = 0; i < 0; i++) {
-					if (!cells[i].text.empty()) count++;
-				}
-				if (count != 9) break;
+		DrawText(
+			(currentPlayer + " player turn").c_str(),
+			std::max(0.0f, area.x + cellLength - MeasureText((currentPlayer + " player turn").c_str(), std::min(45.0f, windowWidth / 15))),
+			area.height + 5,
+			std::min(45.0f, windowWidth / 15),
+			WHITE
+		);
+		if (winner.empty()) {
+			if (resetRequestTime != -1 && GetTime() > resetRequestTime + 2) {
 				for (int i = 0; i < 9; i++) cells[i].text = "";
+				resetRequestTime = -1;
+			}
+			if (GuiButton(button.back, "Back")) {
+				currentScreen = Screen::MAIN_MENU;
+				SetMenuSize();
+				for (int i = 0; i < 9; i++) cells[i].text = "";
+			}
+		} else {
+			DrawRectangleLinesEx(button.back, 2, WHITE);
+			DrawRectangle(0, 0, windowWidth, windowHeight, { 255, 255, 255, 192 });
+			const Vector2 textSize = MeasureTextEx(GetFontDefault(), (winner + " has won the game!").c_str(), windowWidth / 15, windowWidth / 75);
+			DrawTextEx(GetFontDefault(),
+				(winner + " has won the game!").c_str(),
+				{ windowWidth / 2 - textSize.x / 2, windowHeight / 2 / 3 - textSize.y / 2, },
+				windowWidth / 15,
+				windowWidth / 75,
+				BLACK
+			);
+			if (GuiButton(button.playAgain, "Play Again")) {
+				for (int i = 0; i < 9; i++) cells[i].text = "";
+				winner = "";
+				currentPlayer = std::rand() % 2 == 0 ? "X" : "O";
+			}
+			if (GuiButton(button.exit, "Exit")) {
+				for (int i = 0; i < 9; i++) cells[i].text = "";
+				winner = "";
+				SetMenuSize();
+				currentScreen = Screen::MAIN_MENU;
 			}
 		}
 	}
+	void GridMouseClick() {
+		if (!winner.empty()) return;
+		const Vector2 mouse = { GetMouseX(), GetMouseY() };
+		for (int i = 0; i < 9; i++) {
+			if (CheckCollisionPointRec(mouse, cells[i].box)) {
+				if (!cells[i].text.empty()) return;
+				cells[i].text = currentPlayer;
+				break;
+			}
+			if (i == 8) return;
+		}
+		GetWinner();
+		if (!winner.empty()) {
+			return;
+		}
+		currentPlayer = currentPlayer == "X" ? "O" : "X";
+		int count = 0;
+		for (int i = 0; i < 9; i++) {
+			if (!cells[i].text.empty()) count++;
+		}
+		if (count != 9) return;
+		resetRequestTime = GetTime();
+	}
 	void GetWinner() {
-		std::cout << "Calculating Winner\n(idk why this isnt working rn its late gonna look at it again tomorrow)" << std::endl;
 		const std::vector<std::vector<int>> won = { { {0, 3, 6}, {1, 4, 7}, {2, 5, 8}, {0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {0, 4, 8}, {2, 4, 6} } };
 		for (int i = 0; i < 8; i++) {
 			const std::vector<int> combination = { { won[i][0], won[i][1], won[i][2] } };
-			std::cout << combination[0] << combination[1] << combination[2] << std::endl;
-			if (cells[combination[0]].text == cells[combination[1]].text && cells[combination[1]].text == cells[combination[2]].text && cells[combination[0]].text.empty()) {
+			if (
+				cells[combination[0]].text == cells[combination[1]].text &&
+				cells[combination[1]].text == cells[combination[2]].text &&
+				!cells[combination[0]].text.empty()
+				) {
 				winner = cells[combination[0]].text;
+				SetGridSize();
 				return;
 			}
 		}
 	}
 };
-int main()
+int WinMain()
 {
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 	InitWindow(800, 600, "TicTacToe");
-	SetWindowMinSize(200, 200);
-	SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
+	Image icon = LoadImage("icon.png");
+	if (icon.data != NULL) {
+		SetWindowIcon(icon);
+		UnloadImage(icon);
+	}
+	SetWindowMinSize(500, 350);
+	SetTargetFPS(60);
 	MaximizeWindow();
 	GuiSetStyle(DEFAULT, BASE_COLOR_NORMAL, 0x000000FF);
 	GuiSetStyle(DEFAULT, BASE_COLOR_FOCUSED, 0x111111FF);
@@ -147,7 +199,7 @@ int main()
 	GuiSetStyle(DEFAULT, BORDER_COLOR_NORMAL, 0xFFFFFFFF);
 	GuiSetStyle(DEFAULT, BORDER_COLOR_FOCUSED, 0xEEEEEEFF);
 	GuiSetStyle(DEFAULT, BORDER_COLOR_PRESSED, 0xFFFFFFFF);
-	TTTGame ticTacToe;
+	TicTacToe ticTacToe;
 	while (!WindowShouldClose()) {
 		BeginDrawing();
 		ClearBackground(BLACK);
