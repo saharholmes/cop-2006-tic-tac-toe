@@ -1,3 +1,4 @@
+// _CRT_SECURE_NO_WARNINGS included for raygui as instructed in error messages.
 #define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <cstdlib>
@@ -9,11 +10,13 @@
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 #include "tictactoe.h"
+// resetSecondsDelay is used in the case of a tie so the user has time to process a tie has occured before the board is reset.
 TicTacToe::TicTacToe()
 {
 	SetMenuSize();
 	resetSecondsDelay = -1;
 }
+// Minimum play button size is 400pxx50px
 void TicTacToe::SetMenuSize()
 {
 	windowWidth = GetScreenWidth();
@@ -33,6 +36,7 @@ void TicTacToe::DrawMenu()
 		SetGridSize();
 	}
 }
+// Sets positions and sizes of ui elements on the gameplay screen based on window size.
 void TicTacToe::SetGridSize()
 {
 	windowWidth = GetScreenWidth();
@@ -73,6 +77,7 @@ void TicTacToe::SetGridSize()
 	}
 	GuiSetStyle(DEFAULT, TEXT_SIZE, button.textSize.y);
 }
+// Draws gameplay screen ui elements.
 void TicTacToe::DrawGrid()
 {
 	for (int i = 0; i < 9; i++)
@@ -134,6 +139,7 @@ void TicTacToe::DrawGrid()
 		}
 	}
 }
+// Determines whether mouse click is valid for a player's turn.
 void TicTacToe::GridMouseClick() {
 	if (!winner.empty()) return;
 	const Vector2 mouse = { GetMouseX(), GetMouseY() };
@@ -158,6 +164,7 @@ void TicTacToe::GridMouseClick() {
 	if (count != 9) return;
 	resetSecondsDelay = GetTime();
 }
+// Checks both player's text character in array for winning combination.
 void TicTacToe::GetWinner()
 {
 	const std::vector<std::vector<int>> won = { { {0, 3, 6}, {1, 4, 7}, {2, 5, 8}, {0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {0, 4, 8}, {2, 4, 6} } };
@@ -175,6 +182,7 @@ void TicTacToe::GetWinner()
 		}
 	}
 }
+// Used WinMain for /MTd and /MT code generation. Switching the code generation setting is part of packaging the required dlls with the exe file.
 int WinMain()
 {
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
